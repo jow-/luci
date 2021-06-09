@@ -8,6 +8,7 @@
 'require form';
 'require network';
 'require firewall';
+'require template';
 'require tools.widgets as widgets';
 'require tools.network as nettools';
 
@@ -34,23 +35,37 @@ function render_iface(dev, alias) {
 	var type = dev ? dev.getType() : 'ethernet',
 	    up   = dev ? dev.isUp() : false;
 
-	return E('span', { class: 'cbi-tooltip-container' }, [
-		E('img', { 'class' : 'middle', 'src': L.resource('icons/%s%s.png').format(
-			alias ? 'alias' : type,
-			up ? '' : '_disabled') }),
-		E('span', { 'class': 'cbi-tooltip ifacebadge large' }, [
-			E('img', { 'src': L.resource('icons/%s%s.png').format(
-				type, up ? '' : '_disabled') }),
-			L.itemlist(E('span', { 'class': 'left' }), [
-				_('Type'),      dev ? dev.getTypeI18n() : null,
-				_('Device'),    dev ? dev.getName() : _('Not present'),
-				_('Connected'), up ? _('yes') : _('no'),
-				_('MAC'),       dev ? dev.getMAC() : null,
-				_('RX'),        dev ? '%.2mB (%d %s)'.format(dev.getRXBytes(), dev.getRXPackets(), _('Pkts.')) : null,
-				_('TX'),        dev ? '%.2mB (%d %s)'.format(dev.getTXBytes(), dev.getTXPackets(), _('Pkts.')) : null
-			])
-		])
-	]);
+	var tpl = template.fromString('<span class="cbi-tooltip-container">\
+		<img class="middle" src="{$.icon1}" />\
+		<span class="cbi-tooltip ifacebadge large">\
+			<img src="{$.icon2}" />\
+			<span class="left">\
+				<span class="nowrap" tpl-foreach="$.items">\
+					<span tpl-if="@[1]">\
+						<strong><!--{@[0]}-->: </strong>\
+						<!--{@[1]}-->\
+						<br />\
+					</span>\
+				</span>\
+			</span>\
+		</span>\
+	</span>');
+
+	return tpl.render({
+		icon1: L.resource('icons/%s%s.png').format(alias ? 'alias' : type, up ? '' : '_disabled'),
+		icon2: L.resource('icons/%s%s.png').format(type, up ? '' : '_disabled'),
+		alias: alias,
+		type: type,
+		up: up,
+		items: [
+			[ _('Type'), dev ? dev.getTypeI18n() : null ],
+			[ _('Device'), dev ? dev.getName() : _('Not present') ],
+			[ _('Connected'), up ? _('yes') : _('no') ],
+			[ _('MAC'), dev ? dev.getMAC() : null ],
+			[ _('RX'), dev ? '%.2mB (%d %s)'.format(dev.getRXBytes(), dev.getRXPackets(), _('Pkts.')) : null ],
+			[ _('TX'), dev ? '%.2mB (%d %s)'.format(dev.getTXBytes(), dev.getTXPackets(), _('Pkts.')) : null ]
+		]
+	});
 }
 
 function render_status(node, ifc, with_device) {
