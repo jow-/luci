@@ -765,6 +765,28 @@ rpc_luci_parse_network_device_sys(const char *name, struct ifaddrs *ifaddr)
 	blobmsg_add_u8(&blob, "pointtopoint", ifa_flags & IFF_POINTOPOINT);
 	blobmsg_close_table(&blob, o2);
 
+	o2 = blobmsg_open_table(&blob, "link");
+
+	n = atoi(readstr("/sys/class/net/%s/speed", name));
+	blobmsg_add_u32(&blob, "speed", n);
+
+	p = readstr("/sys/class/net/%s/duplex", name);
+	blobmsg_add_string(&blob, "duplex", *p ? p : "unknown");
+
+	n = atoi(readstr("/sys/class/net/%s/carrier", name));
+	blobmsg_add_u8(&blob, "carrier", n == 1);
+
+	n = atoi(readstr("/sys/class/net/%s/carrier_changes", name));
+	blobmsg_add_u32(&blob, "changes", n);
+
+	n = atoi(readstr("/sys/class/net/%s/carrier_up_count", name));
+	blobmsg_add_u32(&blob, "up", n);
+
+	n = atoi(readstr("/sys/class/net/%s/carrier_down_count", name));
+	blobmsg_add_u32(&blob, "down", n);
+
+	blobmsg_close_table(&blob, o2);
+
 	blobmsg_close_table(&blob, o);
 }
 
